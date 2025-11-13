@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>شركة مالين الزرقاء</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --primary:#4361ee; --accent:#3f37c9; --success:#06d6a0; --danger:#ef476f;
+      --bg:#eaf6ff; --card:#ffffff; --light:#edf2f4; --border:#e2e8f0; --text:#2b2d42;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; padding:18px; font-family:"Tajawal",sans-serif; background:linear-gradient(135deg,#e0f7fa,#f0f4f8);
+      color:var(--text); direction:rtl;
+    }
+    .container{max-width:1100px;margin:0 auto;background:var(--card);border-radius:14px;padding:20px;border:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+    h1{text-align:center;color:var(--primary);margin:0 0 16px;font-weight:900}
+
+    /* Tabs */
+    .tabs{display:flex;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:14px;overflow:auto}
+    .tab{padding:10px 16px;background:var(--light);border-radius:10px 10px 0 0;cursor:pointer;font-weight:700;white-space:nowrap}
+    .tab.active{background:var(--primary);color:#fff}
+
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+
+    /* Controls */
+    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+    .search-box{position:relative;flex:1}
+    .search-box input{width:100%;padding:10px 44px 10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--light);font-size:14px}
+    .search-box i{position:absolute;left:auto;right:12px;color:var(--primary);font-size:16px;pointer-events:none}
+
+    select{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--light);font-weight:700}
+
+    /* Stats grid */
+    .stats-grid{display:grid;gap:12px;grid-template-columns:repeat(2,1fr);margin-bottom:12px}
+    .stat-card{background:var(--light);padding:12px;border-radius:10px;text-align:center;border:1px solid var(--border)}
+    .stat-card h3{margin:0;color:#667085;font-size:13px}
+    .stat-card p{margin:6px 0 0;font-weight:800;color:var(--primary);font-size:1.05rem}
+
+    /* Employees */
+    .employees-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+    /* NOTE: padding-left reserved for left-side badge */
+    .employee-card{position:relative;background:var(--card);border-radius:12px;padding:16px 14px 12px 84px;border:1px solid var(--border);box-shadow:0 6px 18px rgba(17,24,39,.04)}
+    .employee-card.had-badge{padding-left:100px} /* extra space if badge wide */
+
+    /* Branch badge placed on extreme left of the card */
+    .branch-tag{position:absolute;top:12px;left:10px;right:auto;background:var(--success);color:#fff;padding:6px 12px;border-radius:16px;font-weight:800;font-size:12px;z-index:3;box-shadow:0 6px 14px rgba(0,0,0,0.08)}
+    /* If you need different colors per branch, JS can add a class and CSS rules */
+
+    .employee-card h3{margin:0 0 8px 0;text-align:left;direction:rtl;line-height:1.2}
+    .total-salary{font-weight:800;color:var(--success);margin-bottom:8px}
+    .role-group{background:var(--light);padding:8px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border)}
+    .role-group-title{font-weight:800;color:var(--accent);margin-bottom:6px;font-size:13px}
+    .role-item{display:flex;justify-content:space-between;padding:6px;background:#fff;border-radius:6px;border:1px solid var(--border);margin:6px 0;font-size:13px}
+    .edit-btn{margin-top:8px;width:100%;padding:10px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-weight:800;cursor:pointer}
+
+    /* Charts */
+    .charts-grid{display:grid;gap:16px;margin-top:10px}
+    .chart-container{background:var(--light);padding:12px;border-radius:10px;border:1px solid var(--border)}
+    .chart-title{text-align:center;color:var(--primary);font-weight:800;margin-bottom:8px}
+    canvas{width:100% !important;height:220px !important;display:block}
+
+    /* Org tree */
+    .org-tree{background:var(--light);padding:14px;border-radius:10px;border:1px solid var(--border);max-height:60vh;overflow:auto;direction:rtl}
+    .tree-node{margin:8px 0}
+    .node-header{background:var(--primary);color:#fff;padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.06)}
+    .node-header::after{content:'+';font-weight:800;margin-inline-start:8px}
+    .tree-node.open > .node-header::after{content:'−'}
+    .children{margin-left:20px;border-left:3px solid rgba(67,97,238,.12);padding-left:12px;display:none}
+    .tree-node.open > .children{display:block}
+    .node-content{background:#fff;padding:10px;border-radius:8px;border:1px solid var(--primary);margin:8px 0;font-size:14px}
+
+    /* Overlays */
+    .auth-overlay,.edit-form{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:9999;padding:12px}
+    .auth-box,.edit-box{width:100%;max-width:720px;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border)}
+    .auth-box h2,.edit-box h2{margin:0 0 12px;color:var(--primary)}
+    .auth-box input,.edit-box input,.edit-box select{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);margin:8px 0}
+
+    .auth-actions,.edit-actions{display:flex;gap:8px;margin-top:8px}
+    .btn-success{background:var(--success);color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:800}
+    .btn-danger{background:var(--danger);color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:800}
+
+    @media(min-width:720px){
+      .stats-grid{grid-template-columns:repeat(4,1fr)}
+      .charts-grid{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <h1>شركة مالين الزرقاء</h1>
+
+    <div class="tabs" role="tablist" aria-label="التبويبات">
+      <div class="tab active" onclick="openTab('employees')" role="tab">الموظفين</div>
+      <div class="tab" onclick="openTab('stats')" role="tab">الإحصائيات</div>
+      <div class="tab" onclick="openTab('org')" role="tab">الهيكل التنظيمي</div>
+    </div>
+
+    <!-- Employees tab -->
+    <div id="employees" class="tab-content active" role="tabpanel">
+      <div class="controls">
+        <div class="search-box" style="min-width:240px">
+          <input id="searchInput" placeholder="ابحث بالاسم/القسم/المنصب..." aria-label="ابحث">
+          <i class="fas fa-search" aria-hidden="true"></i>
+        </div>
+        <select id="branchFilter" aria-label="تحديد الفرع">
+          <option value="all">جميع الفروع</option>
+        </select>
+        <button id="resetStorage" style="background:#f3f4f6;border:1px solid var(--border);padding:8px;border-radius:8px;cursor:pointer">إعادة تعيين البيانات</button>
+      </div>
+
+      <div class="stats-grid" id="statsGrid" aria-live="polite"></div>
+      <div class="employees-grid" id="employeesGrid" aria-live="polite"></div>
+    </div>
+
+    <!-- Stats tab -->
+    <div id="stats" class="tab-content" role="tabpanel" aria-hidden="true">
+      <div class="controls">
+        <select id="statsBranchFilter" aria-label="فلتر فرع للإحصائيات"><option value="all">جميع الفروع</option></select>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-container"><div class="chart-title">عدد الموظفين لكل فرع</div><canvas id="branchChart"></canvas></div>
+        <div class="chart-container"><div class="chart-title">توزيع الأقسام</div><canvas id="sectionChart"></canvas></div>
+        <div class="chart-container"><div class="chart-title">توزيع الرواتب</div><canvas id="salaryChart"></canvas></div>
+        <div class="chart-container"><div class="chart-title">إجمالي الرواتب حسب فرع</div><canvas id="totalSalaryChart"></canvas></div>
+      </div>
+
+      <div class="stats-employees-list" style="margin-top:12px">
+        <h3 style="text-align:center;color:var(--primary);margin-bottom:8px">قائمة الموظفين (فرع مختار)</h3>
+        <div id="statsEmployeesContainer"></div>
+      </div>
+    </div>
+
+    <!-- Org tab -->
+    <div id="org" class="tab-content" role="tabpanel" aria-hidden="true">
+      <div class="controls">
+        <select id="orgBranchFilter" onchange="updateOrgChart()" aria-label="فلتر فرع للهيكل"><option value="all">جميع الفروع</option></select>
+      </div>
+      <div class="org-tree" id="orgTreeContainer" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- Auth overlay -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-box" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <h2 id="authTitle">تأكيد الهوية</h2>
+      <input id="authCode" type="password" placeholder="أدخل الرمز (مثال: 1999)" aria-label="رمز التحقق">
+      <div class="auth-actions">
+        <button class="btn-success" id="authConfirm">تأكيد</button>
+        <button class="btn-danger" id="authCancel">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit overlay -->
+  <div class="edit-form" id="editForm">
+    <div class="edit-box" role="dialog" aria-modal="true">
+      <h2>تعديل بيانات الموظف</h2>
+      <div style="text-align:right;font-weight:700;margin-bottom:8px">تعديل كل المداخل لنفس الاسم</div>
+      <div id="editRolesContainer" style="max-height:50vh;overflow:auto;display:flex;flex-direction:column;gap:8px"></div>
+
+      <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+        <button class="btn-success" id="saveEditBtn">حفظ</button>
+        <button class="btn-danger" id="cancelEditBtn">إلغاء</button>
+        <button id="addRoleBtn" style="margin-inline-start:auto;background:var(--primary);color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer">إضافة دور جديد</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- بيانات الموظفين (CSV التي أكدت عليها) ---------- */
+const INITIAL_EMPLOYEES = [
+  { name:"محمد الشهراني", branch:"الزرقاء أشبيليا", section:"الإدارة", position:"مدير الفرع", salary:4500, contract:"أساسي" },
+  { name:"محمد الشهراني", branch:"الفرع الإلكتروني", section:"الإدارة", position:"مدير الفرع", salary:4500, contract:"أساسي" },
+  { name:"سلطان أحمد الفهيد", branch:"الزرقاء أشبيليا", section:"الإدارة", position:"مشرف القسم", salary:5000, contract:"أساسي" },
+  { name:"مها الحربي", branch:"الزرقاء أشبيليا", section:"الإدارة", position:"الاستقبال وخدمة العملاء", salary:5000, contract:"أساسي" },
+  { name:"سماح الذيباني", branch:"الزرقاء أشبيليا", section:"الإدارة", position:"مساعد مدير الفرع", salary:4000, contract:"متعاون كامل" },
+  { name:"ممدوح العنزي", branch:"الزرقاء أشبيليا", section:"الإدارة", position:"استقبال وخدمة عملاء", salary:4500, contract:"متعاون جزئي" },
+  { name:"سعود العتيبي", branch:"الزرقاء أشبيليا", section:"الحاسب الرجالي", position:"مدرب", salary:5000, contract:"متعاون جزئي" },
+  { name:"أحمد الطيب", branch:"الزرقاء أشبيليا", section:"الحاسب الرجالي", position:"مدرب", salary:5300, contract:"أساسي" },
+  { name:"آدم صالح", branch:"الزرقاء أشبيليا", section:"إنجليزي الرجالي", position:"مدرب", salary:5300, contract:"أساسي" },
+  { name:"فضل الأجنبي", branch:"الزرقاء أشبيليا", section:"إنجليزي الرجالي", position:"مدرب", salary:7000, contract:"أساسي" },
+  { name:"عبدالرزاق", branch:"الزرقاء أشبيليا", section:"إنجليزي الرجالي", position:"مدرب", salary:3500, contract:"متعاون جزئي" },
+  { name:"يحيى زيدان", branch:"الزرقاء أشبيليا", section:"إنجليزي الرجالي", position:"مدرب", salary:3800, contract:"متعاون جزئي" },
+  { name:"عبدالله الأجرد", branch:"الزرقاء أشبيليا", section:"الإدارة", position:"مشرف قسم اللغات", salary:2500, contract:"متعاون جزئي" },
+  { name:"عبدالله الأجرد", branch:"الفرع الإلكتروني", section:"الإدارة", position:"مشرف قسم اللغات", salary:2500, contract:"متعاون جزئي" },
+  { name:"أونا بريرا", branch:"الزرقاء أشبيليا", section:"إنجليزي النسائي", position:"مدرب", salary:4500, contract:"متعاون جزئي" },
+  { name:"عفت حاكمي", branch:"الزرقاء أشبيليا", section:"إنجليزي النسائي", position:"مدرب", salary:3500, contract:"متعاون جزئي" },
+  { name:"سارة السودانية", branch:"الزرقاء أشبيليا", section:"إنجليزي النسائي", position:"مدرب", salary:8500, contract:"أساسي" },
+  { name:"شروق", branch:"الزرقاء أشبيليا", section:"الحاسب النسائي", position:"مدرب", salary:3500, contract:"متعاون جزئي" },
+  { name:"ثامر الإمام", branch:"الفرع الإلكتروني", section:"الدبلومات المهنية", position:"منظم الدبلوم العالي", salary:6000, contract:"أساسي" },
+  { name:"إيهاب خليفة", branch:"الفرع الإلكتروني", section:"الدبلومات المهنية", position:"مدرب", salary:3600, contract:"متعاون جزئي" },
+  { name:"هيفاء الصقر", branch:"الفرع الإلكتروني", section:"الدبلومات المهنية", position:"مدرب", salary:3800, contract:"متعاون جزئي" },
+  { name:"الهنوف الفريح", branch:"الفرع الإلكتروني", section:"الإدارة", position:"مشرف اللغة الصينية", salary:4500, contract:"متعاون جزئي" },
+  { name:"جود", branch:"الفرع الإلكتروني", section:"اللغات - صيني", position:"مدرب", salary:3000, contract:"متعاون جزئي" },
+  { name:"جوري", branch:"الفرع الإلكتروني", section:"اللغات - صيني", position:"مدرب", salary:3000, contract:"متعاون جزئي" },
+  { name:"حصة", branch:"الفرع الإلكتروني", section:"اللغات - صيني", position:"مدرب", salary:3000, contract:"متعاون جزئي" },
+  { name:"شيخة", branch:"الفرع الإلكتروني", section:"اللغات - صيني", position:"مدرب", salary:3000, contract:"متعاون جزئي" },
+  { name:"آسيا", branch:"الفرع الإلكتروني", section:"اللغات - إنجليزي", position:"مدرب", salary:3500, contract:"متعاون جزئي" },
+  { name:"هيفاء", branch:"الفرع الإلكتروني", section:"اللغات - إنجليزي", position:"مدرب", salary:3000, contract:"متعاون جزئي" },
+  { name:"لبنى الشيخ", branch:"الفرع الإلكتروني", section:"اللغات - إنجليزي", position:"مدرب", salary:3500, contract:"متعاون جزئي" },
+  { name:"بندر الغامدي", branch:"مالين الصحي", section:"الإدارة", position:"مدير الفرع", salary:15000, contract:"أساسي" },
+  { name:"تسنيم عصفور", branch:"مالين الصحي", section:"الإدارة", position:"مساعد إداري", salary:5000, contract:"أساسي" },
+  { name:"محمد إبراهيم المسلمي", branch:"مالين الصحي", section:"الإدارة", position:"منسق أكاديمي", salary:8000, contract:"أساسي" },
+  { name:"عبدالله الخطيب", branch:"مالين الصحي", section:"الإدارة", position:"مسؤول التسويق", salary:4500, contract:"أساسي" },
+  { name:"ماجد الغامدي", branch:"الزرقاء أشبيليا", section:"حماية الأجور", position:"موظف", salary:2000, contract:"أساسي" },
+  { name:"عبدالله خالد عطية", branch:"الزرقاء أشبيليا", section:"حماية الأجور", position:"موظف", salary:2000, contract:"أساسي" },
+  { name:"تركي مصلح الغامدي", branch:"الزرقاء أشبيليا", section:"حماية الأجور", position:"موظف", salary:2000, contract:"أساسي" },
+  { name:"حمزة الغامدي", branch:"الفرع الإلكتروني", section:"حماية الأجور", position:"موظف", salary:2000, contract:"أساسي" },
+  { name:"عبد الشكور", branch:"الصيانة والتشغيل", section:"الصيانة والتشغيل", position:"عامل", salary:2000, contract:"أساسي" },
+  { name:"عبد الملك", branch:"الصيانة والتشغيل", section:"الصيانة والتشغيل", position:"عامل", salary:2200, contract:"أساسي" },
+  { name:"جنان", branch:"الصيانة والتشغيل", section:"حماية الأجور", position:"موظف", salary:2000, contract:"أساسي" },
+  { name:"حمزة", branch:"الصيانة والتشغيل", section:"حماية الأجور", position:"موظف", salary:2000, contract:"أساسي" },
+  { name:"سيف", branch:"الفرع الإلكتروني", section:"الدبلومات المهنية", position:"مدرب", salary:5300, contract:"أساسي" },
+  { name:"هوازن", branch:"الفرع الإلكتروني", section:"حماية الأجور", position:"موظف", salary:2000, contract:"أساسي" },
+  { name:"بغدادي", branch:"الصيانة والتشغيل", section:"الصيانة والتشغيل", position:"عامل", salary:3000, contract:"أساسي" },
+  { name:"هناء", branch:"الصيانة والتشغيل", section:"حماية الأجور", position:"موظف", salary:2000, contract:"أساسي" },
+  { name:"فاطمة الصينية", branch:"الفرع الإلكتروني", section:"اللغات - إنجليزي", position:"مدرب", salary:6000, contract:"متعاون جزئي" }
+];
+
+const STORAGE_KEY = 'malinEmployees_v1';
+let rawEmployees = [];
+
+/* ---------- load/save ---------- */
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    rawEmployees = INITIAL_EMPLOYEES.slice();
+    saveData();
+    return;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length) rawEmployees = parsed;
+    else rawEmployees = INITIAL_EMPLOYEES.slice();
+  } catch (e) {
+    console.warn('خطأ بقراءة localStorage، إعادة تعيين للبيانات الأولية');
+    rawEmployees = INITIAL_EMPLOYEES.slice();
+    saveData();
+  }
+}
+function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(rawEmployees)); }
+
+/* ---------- helpers ---------- */
+function unique(arr){ return Array.from(new Set(arr)) }
+function groupBy(arr, fn){ return arr.reduce((acc,x)=>{const k=fn(x); (acc[k]=acc[k]||[]).push(x); return acc},{}) }
+function escapeHtml(s){ return String(s||'').replace(/[&<>\\]/g,''); }
+function openTab(tabName) { /* Tab function */ }
+
+</script>
+</body>
+</html>
